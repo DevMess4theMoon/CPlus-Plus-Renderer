@@ -1,21 +1,75 @@
+#define UNICODE
+#define _UNICODE
+
+#include <fcntl.h>
+#include <io.h>
 #include "MainWindow.h"
 #include <iostream>
-#include <string>
+#include <sstream>
+#include <cstdint>
+#include <stdint>
 #include <list>
-void MainWindow::fatalError(std::string errorString) {
-	std::cout << errorString << std::endl;
-	std::cout << "Enter any key to quit...";
-	int tmp;
-	std::cin >> tmp;
+#include <wingdi.h>
+#include <iomanip>
 
+bool localRunning = true;
+void MainWindow::fatalError(LPCWSTR errorString) {
+    MessageBox(NULL, errorString, L"Fatal Error", MB_OK);
 }
-
+std::string rgbToHex(int r, int g, int b, bool with_head)
+{
+    std::stringstream ss;
+    if (with_head)
+        ss << "0x";
+    ss << std::hex << (r << 16 | g << 8 | b);
+    return ss.str();
+}
+LRESULT CALLBACK MainWindow::WndProc(HWND window, UINT message, WPARAM wParam, LPARAM lParam) {
+    LRESULT result;
+    switch (message) {
+    case WM_CLOSE:
+    {
+        localRunning = false;
+    }
+    case WM_EXITSIZEMOVE:
+    {
+        memory = VirtualFree(0, _screenWidth * _screenHeight * 4,RDW_ERASE)
+        RECT rect;
+        GetClientRect(_window, &rect);
+        _screenWidth = rect.right - rect.left;
+        _screenHeight = rect.bottom - rect.top;
+        memory = VirtualAlloc(0,
+            _screenWidth * _screenHeight * 4,
+            MEM_RESERVE | MEM_COMMIT,
+            PAGE_READWRITE
+        );
+        std::uint32_t* pixel = (std::uint32_t*)memory;
+        for (int pn = 0; pn < _screenWidth * _screenHeight; ++pn) {
+            int r = abs(sin(pn)) * 255;
+            int g = 255;
+            int b = 0;
+            *pixel++ = std::stoul(rgbToHex(r, g, b, true), nullptr, 16);
+        }
+        std::uint32_t red = 0xFF0000;
+        _bitmapInfo.bmiHeader.biSize = sizeof(_bitmapInfo.bmiHeader);
+        _bitmapInfo.bmiHeader.biWidth = _screenWidth;
+        _bitmapInfo.bmiHeader.biHeight = _screenHeight;
+        _bitmapInfo.bmiHeader.biPlanes = 1;
+        _bitmapInfo.bmiHeader.biBitCount = 32;
+        _bitmapInfo.bmiHeader.biCompression = BI_RGB;
+    }
+    default:
+    {
+        result = DefWindowProc(window, message, wParam, lParam);
+    }
+    }
+    return result;
+}
 MainWindow::MainWindow() 
 {
-	_screenWidth = 1024;
-	_screenHeight = 768;
-	_gameState = WindowState::RUN;
-	_v3 = Vector3(10,5,10);
+	_screenWidth = 1688;
+	_screenHeight = 1050;
+	_windowState = WindowState::RUN;
 	_mesh = Mesh(std::list<Vector3> {
 		Vector3(10, 0, 10),
 		Vector3(10, 0, 0),
@@ -44,50 +98,81 @@ void MainWindow::run(HINSTANCE hInstance, int nShowCmd)
 
 void MainWindow::initSystems(HINSTANCE hInstance, int nShowCmd)
 {
-    _window.cbSize = sizeof(WNDCLASSEX);
-    _window.style = CS_HREDRAW | CS_VREDRAW;
-    _window.lpfnWndProc = DefWindowProc;
-    _window.cbClsExtra = 0;
-    _window.cbWndExtra = 0;
-    _window.hInstance = hInstance;
-    _window.hIcon = LoadIcon(NULL, IDI_APPLICATION);
-    _window.hCursor = LoadCursor(NULL, IDC_ARROW);
-    _window.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-    _window.lpszMenuName = NULL;
-    _window.lpszClassName = "MyWindowClass";
-    _window.hIconSm = LoadIcon(NULL, IDI_APPLICATION);
-    if (!RegisterClassEx(&_window)) {fatalError("Failed to register the window class");}
-    // Create the window
-    _Post_ _Notnull_ HWND hwnd = CreateWindowEx(
+    _windowclass.lpfnWndProc = &MainWindow::WndProc;
+    _windowclass.hInstance = hInstance;
+    _windowclass.lpszClassName = _classname;
+    RegisterClass(&_windowclass);
+    _window = CreateWindowEx(
         0,
-        "MyWindowClass",
-        "My Window",
-        WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT,
-        640, 480,
-        NULL, NULL,
+        _classname,
+        _windowname,
+        WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+        CW_USEDEFAULT,
+        CW_USEDEFAULT,
+        CW_USEDEFAULT,
+        CW_USEDEFAULT,
+        0,
+        0,
         hInstance,
-        NULL
+        0
     );
-    if (!hwnd) {fatalError("Failed to create the window");}
-    // Show the window and paint it for the first time
-    ShowWindow(hwnd, nShowCmd);
-    UpdateWindow(hwnd);
+    if (!_window) {fatalError(L"Failed to create the window");}
+    _windowState;
 }
+void MainWindow::mainLoop()
+{
+    RECT rect;
+    GetClientRect(_window, &rect);
+    _screenWidth = rect.right - rect.left;
+    _screenHeight = rect.bottom - rect.top;
+    memory = VirtualAlloc(0,
+        _screenWidth * _screenHeight * 4,
+        MEM_RESERVE | MEM_COMMIT,
+        PAGE_READWRITE
+    );
+    std::uint32_t* pixel = (std::uint32_t*)memory;
+    for (int pn = 0; pn < _screenWidth * _screenHeight; ++pn) {
+        int r = abs(sin(pn)) * 255;
+        int g = 255;
+        int b = 0;
+        *pixel++ = std::stoul(rgbToHex(r,g,b,true), nullptr, 16);
+    }
+    std::uint32_t red = 0xFF0000;
+    _bitmapInfo.bmiHeader.biSize = sizeof(_bitmapInfo.bmiHeader);
+    _bitmapInfo.bmiHeader.biWidth = _screenWidth;
+    _bitmapInfo.bmiHeader.biHeight = _screenHeight;
+    _bitmapInfo.bmiHeader.biPlanes = 1;
+    _bitmapInfo.bmiHeader.biBitCount = 32;
+    _bitmapInfo.bmiHeader.biCompression = BI_RGB;
 
-void MainWindow::mainLoop() {
-	while (_gameState != WindowState::EXIT) {
+    HDC hdc = GetDC(_window);
+    while (_windowState != WindowState::EXIT)
+    {
+        if (!localRunning) {
+            _windowState = WindowState::EXIT;
+        }
         processInput();
-	}
+        StretchDIBits(
+            hdc,
+            0,
+            0,
+            _screenWidth,
+            _screenHeight,
+            0,
+            0,
+            _screenWidth,
+            _screenHeight,
+            memory,
+            &_bitmapInfo,
+            DIB_RGB_COLORS,
+            SRCCOPY
+        );
+    }
 }
 
 void MainWindow::processInput() {
     MSG msg;
-    if(GetMessage(&msg, NULL, 0, 0))
-    {
-        if (msg.message == WM_QUIT) {
-            break;
-        }
+    while (PeekMessage(&msg, _window, 0, 0, PM_REMOVE)) {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }

@@ -17,5 +17,5 @@ RenderObject::RenderObject(Color nc, std::list<Vector3> ncoordinates) {
 		(U.y * V.z) - (U.z * V.y),
 		(U.z * V.x) - (U.x * V.z),
 		(U.x * V.y) - (U.y * V.x)
-	);
+);
 }

@@ -3,29 +3,31 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.33130.400
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Project6", "Project6\Project6.vcxproj", "{E75A187F-B038-4684-AD5C-FF037BF4A4B4}"
+Project("{911E67C6-3D85-4FCE-B560-20A9C3E3FF48}") = "Project6", "Debug\Project6.exe", "{E6169C73-C019-4F8E-AA72-93E54E5E33D7}"
+	ProjectSection(DebuggerProjectSystem) = preProject
+		PortSupplier = 00000000-0000-0000-0000-000000000000
+		Executable = C:\Users\Purpl\source\repos\Project6\Debug\Project6.exe
+		RemoteMachine = JOY
+		StartingDirectory = C:\Users\Purpl\source\repos\Project6\Debug
+		Environment = Default
+		LaunchingEngine = 00000000-0000-0000-0000-000000000000
+		UseLegacyDebugEngines = No
+		LaunchSQLEngine = No
+		AttachLaunchAction = No
+		IORedirection = Auto
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|x64 = Debug|x64
-		Debug|x86 = Debug|x86
-		Release|x64 = Release|x64
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{E75A187F-B038-4684-AD5C-FF037BF4A4B4}.Debug|x64.ActiveCfg = Debug|x64
-		{E75A187F-B038-4684-AD5C-FF037BF4A4B4}.Debug|x64.Build.0 = Debug|x64
-		{E75A187F-B038-4684-AD5C-FF037BF4A4B4}.Debug|x86.ActiveCfg = Debug|Win32
-		{E75A187F-B038-4684-AD5C-FF037BF4A4B4}.Debug|x86.Build.0 = Debug|Win32
-		{E75A187F-B038-4684-AD5C-FF037BF4A4B4}.Release|x64.ActiveCfg = Release|x64
-		{E75A187F-B038-4684-AD5C-FF037BF4A4B4}.Release|x64.Build.0 = Release|x64
-		{E75A187F-B038-4684-AD5C-FF037BF4A4B4}.Release|x86.ActiveCfg = Release|Win32
-		{E75A187F-B038-4684-AD5C-FF037BF4A4B4}.Release|x86.Build.0 = Release|Win32
+		{E6169C73-C019-4F8E-AA72-93E54E5E33D7}.Release|x86.ActiveCfg = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {1EAD1888-F109-4CFB-8DAB-9A747B5B3789}
+		SolutionGuid = {6C8460C3-2D0D-4E0D-B024-0B3D2EF596E9}
 	EndGlobalSection
 EndGlobal

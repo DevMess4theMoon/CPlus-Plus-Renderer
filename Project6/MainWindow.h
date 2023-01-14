@@ -12,17 +12,23 @@ public:
 	MainWindow();
 	~MainWindow();
 	void run(HINSTANCE hInstance, int nShowCmd);
-	void fatalError(std::string errorString);
-
+	void fatalError(LPCWSTR errorString);
+	std::string decToHex(int n);
+	LPCWSTR _classname = L"WindowClass";
+	LPCWSTR _windowname = L"Window";
 private:
 	void initSystems(HINSTANCE hInstance, int nShowCmd);
 	void mainLoop();
 	void processInput();
-	WNDCLASSEX _window;
+	void drawScreen(HWND hwnd);
+	void* memory;
+	BITMAPINFO _bitmapInfo;
+	static LRESULT CALLBACK WndProc(HWND window, UINT message, WPARAM wParam, LPARAM lParam);
+	WNDCLASS _windowclass;
+	HWND _window;
+	WindowState _windowState;
 	int _screenWidth;
 	int _screenHeight;
-	WindowState _gameState;
-	Vector3 _v3;
 	Mesh _mesh;
 	Color color;
 	RenderObject _ro;
