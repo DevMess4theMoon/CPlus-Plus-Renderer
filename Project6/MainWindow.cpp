@@ -7,12 +7,10 @@
 #include <iostream>
 #include <sstream>
 #include <cstdint>
-#include <stdint>
 #include <list>
 #include <wingdi.h>
 #include <iomanip>
 
-bool localRunning = true;
 void MainWindow::fatalError(LPCWSTR errorString) {
     MessageBox(NULL, errorString, L"Fatal Error", MB_OK);
 }
@@ -26,44 +24,22 @@ std::string rgbToHex(int r, int g, int b, bool with_head)
 }
 LRESULT CALLBACK MainWindow::WndProc(HWND window, UINT message, WPARAM wParam, LPARAM lParam) {
     LRESULT result;
+    MainWindow* mainWindow = reinterpret_cast<MainWindow*>(lParam);
     switch (message) {
     case WM_CLOSE:
     {
-        localRunning = false;
+        mainWindow->_windowState = WindowState::EXIT;
     }
     case WM_EXITSIZEMOVE:
     {
-        memory = VirtualFree(0, _screenWidth * _screenHeight * 4,RDW_ERASE)
-        RECT rect;
-        GetClientRect(_window, &rect);
-        _screenWidth = rect.right - rect.left;
-        _screenHeight = rect.bottom - rect.top;
-        memory = VirtualAlloc(0,
-            _screenWidth * _screenHeight * 4,
-            MEM_RESERVE | MEM_COMMIT,
-            PAGE_READWRITE
-        );
-        std::uint32_t* pixel = (std::uint32_t*)memory;
-        for (int pn = 0; pn < _screenWidth * _screenHeight; ++pn) {
-            int r = abs(sin(pn)) * 255;
-            int g = 255;
-            int b = 0;
-            *pixel++ = std::stoul(rgbToHex(r, g, b, true), nullptr, 16);
-        }
-        std::uint32_t red = 0xFF0000;
-        _bitmapInfo.bmiHeader.biSize = sizeof(_bitmapInfo.bmiHeader);
-        _bitmapInfo.bmiHeader.biWidth = _screenWidth;
-        _bitmapInfo.bmiHeader.biHeight = _screenHeight;
-        _bitmapInfo.bmiHeader.biPlanes = 1;
-        _bitmapInfo.bmiHeader.biBitCount = 32;
-        _bitmapInfo.bmiHeader.biCompression = BI_RGB;
+        mainWindow->drawScreen();
     }
     default:
     {
         result = DefWindowProc(window, message, wParam, lParam);
     }
     }
-    return result;
+    return 0;
 }
 MainWindow::MainWindow() 
 {
@@ -114,43 +90,19 @@ void MainWindow::initSystems(HINSTANCE hInstance, int nShowCmd)
         0,
         0,
         hInstance,
-        0
+        reinterpret_cast<LPVOID>(this)
     );
-    if (!_window) {fatalError(L"Failed to create the window");}
+    if (!_window) {
+        fatalError(L"Failed to Create Window."); 
+    }
     _windowState;
 }
 void MainWindow::mainLoop()
 {
-    RECT rect;
-    GetClientRect(_window, &rect);
-    _screenWidth = rect.right - rect.left;
-    _screenHeight = rect.bottom - rect.top;
-    memory = VirtualAlloc(0,
-        _screenWidth * _screenHeight * 4,
-        MEM_RESERVE | MEM_COMMIT,
-        PAGE_READWRITE
-    );
-    std::uint32_t* pixel = (std::uint32_t*)memory;
-    for (int pn = 0; pn < _screenWidth * _screenHeight; ++pn) {
-        int r = abs(sin(pn)) * 255;
-        int g = 255;
-        int b = 0;
-        *pixel++ = std::stoul(rgbToHex(r,g,b,true), nullptr, 16);
-    }
-    std::uint32_t red = 0xFF0000;
-    _bitmapInfo.bmiHeader.biSize = sizeof(_bitmapInfo.bmiHeader);
-    _bitmapInfo.bmiHeader.biWidth = _screenWidth;
-    _bitmapInfo.bmiHeader.biHeight = _screenHeight;
-    _bitmapInfo.bmiHeader.biPlanes = 1;
-    _bitmapInfo.bmiHeader.biBitCount = 32;
-    _bitmapInfo.bmiHeader.biCompression = BI_RGB;
-
+    drawScreen();
     HDC hdc = GetDC(_window);
     while (_windowState != WindowState::EXIT)
     {
-        if (!localRunning) {
-            _windowState = WindowState::EXIT;
-        }
         processInput();
         StretchDIBits(
             hdc,
@@ -176,4 +128,31 @@ void MainWindow::processInput() {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
+}
+
+void MainWindow::drawScreen(){
+    VirtualFree(memory,0, MEM_RELEASE);
+    RECT rect;
+    GetClientRect(_window, &rect);
+    _screenWidth = rect.right - rect.left;
+    _screenHeight = rect.bottom - rect.top;
+    memory = VirtualAlloc(0,
+        _screenWidth * _screenHeight * 4,
+        MEM_RESERVE | MEM_COMMIT,
+        PAGE_READWRITE
+    );
+    std::uint32_t* pixel = (std::uint32_t*)memory;
+    for (int pn = 0; pn < _screenWidth * _screenHeight; ++pn) {
+        int r = abs(sin((double)pn)) * 255;
+        int g = 255;
+        int b = 0;
+        *pixel++ = std::stoul(rgbToHex(r, g, b, true), nullptr, 16);
+    }
+    std::uint32_t red = 0xFF0000;
+    _bitmapInfo.bmiHeader.biSize = sizeof(_bitmapInfo.bmiHeader);
+    _bitmapInfo.bmiHeader.biWidth = _screenWidth;
+    _bitmapInfo.bmiHeader.biHeight = _screenHeight;
+    _bitmapInfo.bmiHeader.biPlanes = 1;
+    _bitmapInfo.bmiHeader.biBitCount = 32;
+    _bitmapInfo.bmiHeader.biCompression = BI_RGB;
 }

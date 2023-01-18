@@ -20,7 +20,7 @@ private:
 	void initSystems(HINSTANCE hInstance, int nShowCmd);
 	void mainLoop();
 	void processInput();
-	void drawScreen(HWND hwnd);
+	void drawScreen();
 	void* memory;
 	BITMAPINFO _bitmapInfo;
 	static LRESULT CALLBACK WndProc(HWND window, UINT message, WPARAM wParam, LPARAM lParam);
