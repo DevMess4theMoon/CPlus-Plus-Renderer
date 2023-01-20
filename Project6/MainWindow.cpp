@@ -39,7 +39,7 @@ LRESULT CALLBACK MainWindow::WndProc(HWND window, UINT message, WPARAM wParam, L
         result = DefWindowProc(window, message, wParam, lParam);
     }
     }
-    return 0;
+    return result;
 }
 MainWindow::MainWindow() 
 {
@@ -77,7 +77,7 @@ void MainWindow::initSystems(HINSTANCE hInstance, int nShowCmd)
     _windowclass.lpfnWndProc = &MainWindow::WndProc;
     _windowclass.hInstance = hInstance;
     _windowclass.lpszClassName = _classname;
-    RegisterClass(&_windowclass);
+    if (!RegisterClass(&_windowclass)) { fatalError(L"Failed to register the window class"); }
     _window = CreateWindowEx(
         0,
         _classname,
@@ -90,12 +90,11 @@ void MainWindow::initSystems(HINSTANCE hInstance, int nShowCmd)
         0,
         0,
         hInstance,
-        reinterpret_cast<LPVOID>(this)
+        this
     );
     if (!_window) {
-        fatalError(L"Failed to Create Window."); 
+       fatalError(L"Failed to Create Window."); 
     }
-    _windowState;
 }
 void MainWindow::mainLoop()
 {
@@ -131,7 +130,10 @@ void MainWindow::processInput() {
 }
 
 void MainWindow::drawScreen(){
-    VirtualFree(memory,0, MEM_RELEASE);
+    if (memory != nullptr)
+    {
+        VirtualFree(memory, 0, MEM_RELEASE);
+    }
     RECT rect;
     GetClientRect(_window, &rect);
     _screenWidth = rect.right - rect.left;
@@ -143,10 +145,7 @@ void MainWindow::drawScreen(){
     );
     std::uint32_t* pixel = (std::uint32_t*)memory;
     for (int pn = 0; pn < _screenWidth * _screenHeight; ++pn) {
-        int r = abs(sin((double)pn)) * 255;
-        int g = 255;
-        int b = 0;
-        *pixel++ = std::stoul(rgbToHex(r, g, b, true), nullptr, 16);
+        *pixel++ = 0xFF0000;
     }
     std::uint32_t red = 0xFF0000;
     _bitmapInfo.bmiHeader.biSize = sizeof(_bitmapInfo.bmiHeader);
