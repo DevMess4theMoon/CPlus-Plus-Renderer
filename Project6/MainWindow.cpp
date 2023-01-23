@@ -11,28 +11,25 @@
 #include <wingdi.h>
 #include <iomanip>
 
+MainWindow* mW;
+
 void MainWindow::fatalError(LPCWSTR errorString) {
     MessageBox(NULL, errorString, L"Fatal Error", MB_OK);
 }
-std::string rgbToHex(int r, int g, int b, bool with_head)
-{
-    std::stringstream ss;
-    if (with_head)
-        ss << "0x";
-    ss << std::hex << (r << 16 | g << 8 | b);
-    return ss.str();
-}
 LRESULT CALLBACK MainWindow::WndProc(HWND window, UINT message, WPARAM wParam, LPARAM lParam) {
     LRESULT result;
-    MainWindow* mainWindow = reinterpret_cast<MainWindow*>(lParam);
     switch (message) {
     case WM_CLOSE:
     {
-        mainWindow->_windowState = WindowState::EXIT;
+        mW->_windowState = WindowState::EXIT;
     }
     case WM_EXITSIZEMOVE:
     {
-        mainWindow->drawScreen();
+        mW->drawScreen();
+    }
+    case WM_SIZE:
+    {
+        mW->drawScreen();
     }
     default:
     {
@@ -68,6 +65,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::run(HINSTANCE hInstance, int nShowCmd)
 {
+    mW = this;
 	initSystems(hInstance, nShowCmd);
 	mainLoop();
 }
@@ -90,7 +88,7 @@ void MainWindow::initSystems(HINSTANCE hInstance, int nShowCmd)
         0,
         0,
         hInstance,
-        this
+        0
     );
     if (!_window) {
        fatalError(L"Failed to Create Window."); 

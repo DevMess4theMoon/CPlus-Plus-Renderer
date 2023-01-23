@@ -13,7 +13,6 @@ public:
 	~MainWindow();
 	void run(HINSTANCE hInstance, int nShowCmd);
 	void fatalError(LPCWSTR errorString);
-	std::string decToHex(int n);
 	LPCWSTR _classname = L"WindowClass";
 	LPCWSTR _windowname = L"Window";
 private:
