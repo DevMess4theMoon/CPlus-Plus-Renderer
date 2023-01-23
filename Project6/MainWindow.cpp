@@ -16,6 +16,17 @@ MainWindow* mW;
 void MainWindow::fatalError(LPCWSTR errorString) {
     MessageBox(NULL, errorString, L"Fatal Error", MB_OK);
 }
+int MainWindow::CoordsToBitMapIndex(Vector2 coords, int width, int height) {
+    if (coords.x > width || coords.y > height) { return 0; }
+    int index = coords.y * width + coords.x;
+    return index;
+}
+Vector2 MainWindow::BitMapIndexToCoords(int index, int width, int height) {
+    Vector2 coords = Vector2(0,0);
+    if (index > width * height || width == 0 || height == 0) { return coords; }
+    coords.y = floor(index / width);
+    coords.x = floor(index % width);
+}
 LRESULT CALLBACK MainWindow::WndProc(HWND window, UINT message, WPARAM wParam, LPARAM lParam) {
     LRESULT result;
     switch (message) {
@@ -117,6 +128,7 @@ void MainWindow::mainLoop()
             SRCCOPY
         );
     }
+    ReleaseDC(_window, hdc);
 }
 
 void MainWindow::processInput() {
@@ -141,14 +153,42 @@ void MainWindow::drawScreen(){
         MEM_RESERVE | MEM_COMMIT,
         PAGE_READWRITE
     );
-    std::uint32_t* pixel = (std::uint32_t*)memory;
-    for (int pn = 0; pn < _screenWidth * _screenHeight; ++pn) {
-        *pixel++ = Color::rgbToHex(pn, pn, pn);
-    }
+    plotLine(Vector2(50, 75), Vector2(100, 50), Color(ColorMode::RGB1, 255, 0, 0));
+    plotLine(Vector2(100, 50), Vector2(150, 75), Color(ColorMode::RGB1, 255, 0, 0));
+    plotLine(Vector2(150, 75), Vector2(150, 125), Color(ColorMode::RGB1, 255, 0, 0));
+    plotLine(Vector2(150, 125), Vector2(100,150), Color(ColorMode::RGB1, 255, 0, 0));
+    plotLine(Vector2(100, 150), Vector2(50, 125), Color(ColorMode::RGB1, 255, 0, 0));
+    plotLine(Vector2(50,125), Vector2(50, 75), Color(ColorMode::RGB1, 255, 0, 0));
     _bitmapInfo.bmiHeader.biSize = sizeof(_bitmapInfo.bmiHeader);
     _bitmapInfo.bmiHeader.biWidth = _screenWidth;
     _bitmapInfo.bmiHeader.biHeight = _screenHeight;
     _bitmapInfo.bmiHeader.biPlanes = 1;
     _bitmapInfo.bmiHeader.biBitCount = 32;
     _bitmapInfo.bmiHeader.biCompression = BI_RGB;
+}
+void MainWindow::plotLine(Vector2 p1, Vector2 p2, Color color) {
+    int x1 = p1.x, y1 = p1.y, x2 = p2.x, y2 = p2.y;
+    int dx = abs(x2 - x1), dy = abs(y2 - y1);
+    int sx = x1 < x2 ? 1 : -1, sy = y1 < y2 ? 1 : -1;
+    int err = dx - dy;
+
+    while (true) {
+        Vector2 coords = Vector2(x1, y1);
+        int index = CoordsToBitMapIndex(coords, _screenWidth, _screenHeight);
+        float intensity = abs(err - dx + dy) / (float)(dx + dy);
+        std::uint32_t* pixel = (std::uint32_t*)memory;
+        if (pixel) {
+            pixel[index] = Color::colorClassToHex(Color::interpolate(color, Color(ColorMode::RGB1, 0, 0, 0), intensity));
+        }
+        if (x1 == x2 && y1 == y2) { break; };
+        int e2 = 2 * err;
+        if (e2 > -dy) {
+            err -= dy;
+            x1 += sx;
+        }
+        if (e2 < dx) {
+            err += dx;
+            y1 += sy;
+        }
+    }
 }

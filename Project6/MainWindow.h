@@ -1,5 +1,6 @@
 #pragma once
 #include "Vector3.h"
+#include "Vector2.h"
 #include "Mesh.h"
 #include "Color.h"
 #include "RenderObject.h"
@@ -15,6 +16,9 @@ public:
 	void fatalError(LPCWSTR errorString);
 	LPCWSTR _classname = L"WindowClass";
 	LPCWSTR _windowname = L"Window";
+	static int CoordsToBitMapIndex(Vector2 coords, int width, int height);
+	static Vector2 BitMapIndexToCoords(int index, int width, int height);
+	void plotLine(Vector2 p1, Vector2 p2, Color color);
 private:
 	void initSystems(HINSTANCE hInstance, int nShowCmd);
 	void mainLoop();
