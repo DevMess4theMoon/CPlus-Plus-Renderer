@@ -143,9 +143,8 @@ void MainWindow::drawScreen(){
     );
     std::uint32_t* pixel = (std::uint32_t*)memory;
     for (int pn = 0; pn < _screenWidth * _screenHeight; ++pn) {
-        *pixel++ = 0xFF0000;
+        *pixel++ = Color::rgbToHex(pn, pn, pn);
     }
-    std::uint32_t red = 0xFF0000;
     _bitmapInfo.bmiHeader.biSize = sizeof(_bitmapInfo.bmiHeader);
     _bitmapInfo.bmiHeader.biWidth = _screenWidth;
     _bitmapInfo.bmiHeader.biHeight = _screenHeight;

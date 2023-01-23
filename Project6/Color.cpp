@@ -1,17 +1,15 @@
 #include "Color.h"
+#include <string>
 #include <cmath>
 #include <sstream>
+#include "MainWindow.h"
 Color::Color(ColorMode ncolorMode, float nrh, float ngs, float nbv) {
 	colorMode = ncolorMode;
 	rh = nrh;
 	gs = ngs;
 	bv = nbv;
 }
-std::string Color::rgbToHex(int r, int g, int b, bool with_head)
+uint32_t Color::rgbToHex(int r, int g, int b)
 {
-    std::stringstream ss;
-    if (with_head)
-        ss << "0x";
-    ss << std::hex << (r << 16 | g << 8 | b);
-    return ss.str();
+	return r * 65536 + g * 256 + b;
 }
