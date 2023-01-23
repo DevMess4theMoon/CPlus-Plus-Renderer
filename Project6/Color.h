@@ -11,7 +11,7 @@ public:
 	Color operator = (const Color& alt) {
 		return alt;
 	}
-	void hexToRGB(std::string hex);
+	std::stringstream rgbToHex(int r, int g, int b, bool with_head);
 	Color(ColorMode colorMode, float nrh, float ngs, float nbv);
 	Color() = default;
 };
