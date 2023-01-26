@@ -60,17 +60,17 @@ MainWindow::MainWindow()
 	_screenWidth = 1688;
 	_screenHeight = 1050;
 	_windowState = WindowState::RUN;
-	_mesh = Mesh(std::list<Vector3> {
-		Vector3(10, 0, 10),
-		Vector3(10, 0, 0),
-		Vector3(10, 10, 0),
-		Vector3(10, 10, 10),
-		Vector3(0, 0, 10),
-		Vector3(0, 0, 0),
-		Vector3(0, 10, 0),
-		Vector3(0, 10, 10)
+	_mesh = Mesh(std::vector<Vector3> {
+		Vector3(200, 100, 200),
+		Vector3(200, 100, 100),
+		Vector3(200, 200, 100),
+		Vector3(200, 200, 200),
+		Vector3(100, 100, 200),
+		Vector3(100, 100, 100),
+		Vector3(100, 200, 100),
+		Vector3(100, 200, 200)
 	},
-	std::list<int>
+	std::vector<int>
 	{
 		4, 0, 3, 4, 3, 7, 0, 1, 2, 0, 2, 3, 1, 5, 6, 1, 6, 2, 5, 4, 7, 5, 7, 6, 7, 3, 2, 7, 2, 6, 0, 5, 1, 0, 4, 5
 	});
