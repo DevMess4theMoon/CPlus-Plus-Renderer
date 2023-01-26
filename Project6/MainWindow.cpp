@@ -33,14 +33,20 @@ LRESULT CALLBACK MainWindow::WndProc(HWND window, UINT message, WPARAM wParam, L
     case WM_CLOSE:
     {
         mW->_windowState = WindowState::EXIT;
+        return 0;
     }
     case WM_EXITSIZEMOVE:
     {
         mW->drawScreen();
+        return 0;
     }
-    case WM_SIZE:
-    {
-        mW->drawScreen();
+    case WM_SIZING: {
+        RECT* rect = (RECT*)lParam;
+        int width = rect->right - rect->left;
+        int height = rect->bottom - rect->top;
+        if (width < 600) {rect->right = rect->left + 600;}
+        if (height < 400) {rect->bottom = rect->top + 400;}
+        return 0;
     }
     default:
     {
@@ -153,12 +159,10 @@ void MainWindow::drawScreen(){
         MEM_RESERVE | MEM_COMMIT,
         PAGE_READWRITE
     );
-    plotLine(Vector2(50, 75), Vector2(100, 50), Color(ColorMode::RGB1, 255, 0, 0));
-    plotLine(Vector2(100, 50), Vector2(150, 75), Color(ColorMode::RGB1, 255, 0, 0));
-    plotLine(Vector2(150, 75), Vector2(150, 125), Color(ColorMode::RGB1, 255, 0, 0));
-    plotLine(Vector2(150, 125), Vector2(100,150), Color(ColorMode::RGB1, 255, 0, 0));
-    plotLine(Vector2(100, 150), Vector2(50, 125), Color(ColorMode::RGB1, 255, 0, 0));
-    plotLine(Vector2(50,125), Vector2(50, 75), Color(ColorMode::RGB1, 255, 0, 0));
+    //plotTriangle(Vector2(50, 75), Vector2(100, 50), Vector2(100,150), Color(ColorMode::RGB1, 255,0,255),false);
+    for (RenderObject ro : RenderEngine::ConvertMeshToRenderObjects(_mesh)) {
+        plotTriangle(ro.coordinates[0], ro.coordinates[1], ro.coordinates[2], Color(ColorMode::RGB1,255,0,0), false);
+    }
     _bitmapInfo.bmiHeader.biSize = sizeof(_bitmapInfo.bmiHeader);
     _bitmapInfo.bmiHeader.biWidth = _screenWidth;
     _bitmapInfo.bmiHeader.biHeight = _screenHeight;
@@ -191,4 +195,9 @@ void MainWindow::plotLine(Vector2 p1, Vector2 p2, Color color) {
             y1 += sy;
         }
     }
+}
+void MainWindow::plotTriangle(Vector2 p1, Vector2 p2, Vector2 p3, Color c, bool fill) {
+    plotLine(p1, p2, c);
+    plotLine(p2, p3, c);
+    plotLine(p3, p1, c);
 }
