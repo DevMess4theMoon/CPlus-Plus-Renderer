@@ -75,6 +75,10 @@ MainWindow::MainWindow()
 		4, 0, 3, 4, 3, 7, 0, 1, 2, 0, 2, 3, 1, 5, 6, 1, 6, 2, 5, 4, 7, 5, 7, 6, 7, 3, 2, 7, 2, 6, 0, 5, 1, 0, 4, 5
 	});
 	color = Color(ColorMode::RGB1, 0.5, 0.5, 0.5);
+    mat = Matrix(3, 3, 
+        {{1,2,3},{1,2,3},{1,2,3}});
+    mat = mat + mat;
+
 }
 MainWindow::~MainWindow() 
 {
@@ -160,7 +164,9 @@ void MainWindow::drawScreen(){
         PAGE_READWRITE
     );
     //plotTriangle(Vector2(50, 75), Vector2(100, 50), Vector2(100,150), Color(ColorMode::RGB1, 255,0,255),false);
-    for (RenderObject ro : RenderEngine::ConvertMeshToRenderObjects(_mesh)) {
+    std::vector<RenderObject> ros = RenderEngine::ConvertMeshToRenderObjects(_mesh, _screenWidth, _screenHeight);
+
+    for (RenderObject ro : ros) {
         plotTriangle(ro.coordinates[0], ro.coordinates[1], ro.coordinates[2], Color(ColorMode::RGB1,255,0,0), false);
     }
     _bitmapInfo.bmiHeader.biSize = sizeof(_bitmapInfo.bmiHeader);

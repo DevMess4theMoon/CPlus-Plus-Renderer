@@ -5,6 +5,7 @@
 #include "Color.h"
 #include "RenderObject.h"
 #include "RenderEngine.h"
+#include "Matrix.h"
 #include <Windows.h>
 enum class WindowState {RUN, EXIT};
 
@@ -17,6 +18,8 @@ public:
 	void fatalError(LPCWSTR errorString);
 	LPCWSTR _classname = L"WindowClass";
 	LPCWSTR _windowname = L"Window";
+	int _screenWidth;
+	int _screenHeight;
 	static int CoordsToBitMapIndex(Vector2 coords, int width, int height);
 	static Vector2 BitMapIndexToCoords(int index, int width, int height);
 	void plotLine(Vector2 p1, Vector2 p2, Color color);
@@ -32,10 +35,9 @@ private:
 	WNDCLASS _windowclass;
 	HWND _window;
 	WindowState _windowState;
-	int _screenWidth;
-	int _screenHeight;
 	Mesh _mesh;
 	Color color;
 	RenderObject _ro;
+	Matrix mat;
 };
 
