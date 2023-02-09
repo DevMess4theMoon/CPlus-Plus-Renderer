@@ -3,9 +3,9 @@
 Matrix::Matrix(int nsx, int nsy, float default_value) {
 	sx = nsx;
 	sy = nsy;
-	for (int x = 0; x < nsx; x++) {
+	for (int y = 0; y < nsy; y++) {
 		std::vector<float> temp = {};
-		for (int y = 0; y < nsy; y++)
+		for (int x = 0; x < nsy; x++)
 		{
 			temp.push_back(default_value);
 		}

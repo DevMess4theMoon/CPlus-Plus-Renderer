@@ -75,10 +75,11 @@ MainWindow::MainWindow()
 		4, 0, 3, 4, 3, 7, 0, 1, 2, 0, 2, 3, 1, 5, 6, 1, 6, 2, 5, 4, 7, 5, 7, 6, 7, 3, 2, 7, 2, 6, 0, 5, 1, 0, 4, 5
 	});
 	color = Color(ColorMode::RGB1, 0.5, 0.5, 0.5);
-    mat = Matrix(3, 3, 
-        {{1,2,3},{1,2,3},{1,2,3}});
-    mat = mat + mat;
-
+    mat = Matrix(3, 1, 
+        {{3,4,2}});
+    mat2 = Matrix(4, 3,
+        { {13,9,7,15}, {8,7,4,6}, {6,4,0,3} });
+    mat = mat * mat2;
 }
 MainWindow::~MainWindow() 
 {

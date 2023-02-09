@@ -39,5 +39,6 @@ private:
 	Color color;
 	RenderObject _ro;
 	Matrix mat;
+	Matrix mat2;
 };
 
