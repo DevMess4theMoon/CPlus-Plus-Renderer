@@ -40,5 +40,6 @@ private:
 	RenderObject _ro;
 	Matrix mat;
 	Matrix mat2;
+	Matrix im;
 };
 

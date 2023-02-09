@@ -1,4 +1,5 @@
 #pragma once
+#include "Matrix.h"
 class Vector2
 {
 public:
@@ -53,6 +54,9 @@ public:
 	}
 	Vector2 operator /= (const Vector2& other) {
 		return Vector2(x / other.x, y / other.y);
+	}
+	operator Matrix() const {
+		return Matrix(1, 2, { {x},{y} });
 	}
 };
 

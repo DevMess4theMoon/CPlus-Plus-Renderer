@@ -9,6 +9,17 @@ public:
 	Matrix() = default;
 	float sx;
 	float sy;
+	static Matrix im(int s) {
+		Matrix temp(s,s,0);
+		for (int x = 0; x < s; x++) {
+			for (int y = 0; y < s; y++) {
+				if (x == y) {
+					temp.m[x][y] = 1;
+				}
+			}
+		}
+		return temp;
+	}
 	Matrix operator + (const Matrix& other) {
 		if (other.sx != sx || other.sy != sy) {
 			return Matrix(sx, sy, 0);
