@@ -57,6 +57,6 @@ public:
 		return Vector3(x / other.x, y / other.y, z / other.z);
 	}
 	operator Matrix() const {
-		return Matrix(1, 3, { {x},{y},{z} });
+		return Matrix(4, 1, { {x},{y},{z},{1} });
 	}
 };

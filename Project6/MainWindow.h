@@ -6,6 +6,7 @@
 #include "RenderObject.h"
 #include "RenderEngine.h"
 #include "Matrix.h"
+#include "Rotation.h"
 #include <Windows.h>
 enum class WindowState {RUN, EXIT};
 
@@ -24,6 +25,7 @@ public:
 	static Vector2 BitMapIndexToCoords(int index, int width, int height);
 	void plotLine(Vector2 p1, Vector2 p2, Color color);
 	void plotTriangle(Vector2 p1, Vector2 p2, Vector2 p3, Color c, bool fill);
+	
 private:
 	void initSystems(HINSTANCE hInstance, int nShowCmd);
 	void mainLoop();
@@ -38,8 +40,5 @@ private:
 	Mesh _mesh;
 	Color color;
 	RenderObject _ro;
-	Matrix mat;
-	Matrix mat2;
-	Matrix im;
 };
 

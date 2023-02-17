@@ -1,22 +1,19 @@
 #pragma once
 #include <vector>
+#include <iostream>
 class Matrix
 {
 public:
-	std::vector<std::vector<float>> m;
-	Matrix(int nsx, int nsy, float default_value);
-	Matrix(int nsx, int nsy, std::vector<std::vector<float>> default_value);
+	std::vector<std::vector<double>> m;
+	Matrix(int nsx, int nsy, double default_value);
+	Matrix(int nsx, int nsy, std::vector<std::vector<double>> default_value);
 	Matrix() = default;
-	float sx;
-	float sy;
+	int sx;
+	int sy;
 	static Matrix im(int s) {
-		Matrix temp(s,s,0);
+		Matrix temp(s, s, 0);
 		for (int x = 0; x < s; x++) {
-			for (int y = 0; y < s; y++) {
-				if (x == y) {
-					temp.m[x][y] = 1;
-				}
-			}
+			temp.m[x][x] = 1;
 		}
 		return temp;
 	}
@@ -25,7 +22,7 @@ public:
 			return Matrix(sx, sy, 0);
 		}
 		else {
-			std::vector<std::vector<float>> temp = m;
+			std::vector<std::vector<double>> temp = m;
 			for (int r = 0; r < sx; r++) {
 				for (int v = 0; v < sy; v++) {
 					temp[r][v] = m[r][v] + other.m[r][v];
@@ -35,18 +32,20 @@ public:
 		}
 	}
 	Matrix operator * (const Matrix& other) {
-		if (sx != other.sy) {
+		if (sy != other.sx) {
 			return Matrix(sx, sy, 0);
 		}
 
-		std::vector<std::vector<float>> result(sy, std::vector<float>(other.sx, 0));
-		for (int i = 0; i < sy; i++) {
-			for (int j = 0; j < other.sx; j++) {
-				for (int k = 0; k < sx; k++) {
-					result[i][j] += m[i][k] * other.m[k][j];
+		std::vector<std::vector<double>> result(sx, std::vector<double>(other.sy, 0));
+		for (int x = 0; x < sx; x++) {
+			for (int y = 0; y < other.sy; y++) {
+				for (int r = 0; r < sy; r++) {
+
+					result[x][y] += m[x][r] * other.m[r][y];		
+
 				}
 			}
 		}
-		return Matrix(other.sx, sy, result);
+		return Matrix(sx, other.sy, result);
 	}
 };

@@ -20,7 +20,6 @@
             RenderObject ro;
             for (int c = 0; c < 3; c++)
             {
-                int index = i + c;
                 ro.coordinates.push_back(Vector2(mesh.vertices[mesh.triangles[i + c]].x, mesh.vertices[mesh.triangles[i + c]].y));
             }
             arr.push_back(ro);
