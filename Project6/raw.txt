@@ -1,260 +1,52 @@
-#pragma once
-#include <string>
-#include <cstdint>
-#include <fcntl.h>
-enum ColorMode { RGB1, RGB255, HSV };
-class Color
-{
-public:
-	float rh;
-	float gs;
-	float bv;
-	ColorMode colorMode;
-	Color operator = (const Color& alt) {
-		return alt;
-	}
-	static uint32_t rgbToHex(int r, int g, int b);
-	static uint32_t colorClassToHex(Color c);
-	static Color interpolate(Color c1, Color c2, float intensity);
-	Color(ColorMode colorMode, float nrh, float ngs, float nbv);
-	Color() = default;
-};
-#pragma once
-#include "Vector3.h"
-#include "Vector2.h"
-#include "Mesh.h"
-#include "Color.h"
-#include "RenderObject.h"
-#include "RenderEngine.h"
-#include "Matrix.h"
-#include <Windows.h>
-enum class WindowState {RUN, EXIT};
+#include "Rotation.h"
+#include <math.h>
+constexpr float MY_PI = 3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679f;
+constexpr float ONE_DEGREE = 0.01745329251994329576923690768488612713442871888541725456097191440171009114603449443682241569634509482167f;
+Matrix Rotation::rotX(double amount) {
+	double x = ONE_DEGREE * amount;
+	return Matrix(4, 4, {
+		{1, 0     , 0	   , 0},
+		{0, cos(x), -sin(x), 0},
+		{0, sin(x), cos(x) , 0},
+		{0, 0     , 0      , 1}
+		});
+}
+Matrix Rotation::rotY(double amount) {
+	double y = ONE_DEGREE * amount;
+	return Matrix(4, 4, {
+		{cos(y) , 0, sin(y), 0},
+		{0      , 1, 0     , 0},
+		{-sin(y), 0, cos(y), 0},
+		{0      , 0, 0     , 1}
+		});
+}
+Matrix Rotation::rotZ(double amount) {
+	double z = ONE_DEGREE * amount;
+	return Matrix(4, 4, {
+		{cos(z), -sin(z), 0, 0},
+		{sin(z), cos(z) , 0, 0},
+		{0     , 0      , 1, 0},
+		{0     , 0      , 0, 1}
+		});
+}
+Mesh Rotation::rotMesh(Mesh mesh, Vector3 rotation, Vector3 center) {
+	Matrix m;
+	Matrix rotM = rotX(rotation.x) * rotY(rotation.y) * rotZ(rotation.z);
+	std::vector<Vector3> temp(mesh.vertices.size());
+	for (int i = 0; i < temp.size(); i++) {
+		m = (Matrix)mesh.vertices[i];
 
-class MainWindow
-{
-public:
-	MainWindow();
-	~MainWindow();
-	void run(HINSTANCE hInstance, int nShowCmd);
-	void fatalError(LPCWSTR errorString);
-	LPCWSTR _classname = L"WindowClass";
-	LPCWSTR _windowname = L"Window";
-	int _screenWidth;
-	int _screenHeight;
-	static int CoordsToBitMapIndex(Vector2 coords, int width, int height);
-	static Vector2 BitMapIndexToCoords(int index, int width, int height);
-	void plotLine(Vector2 p1, Vector2 p2, Color color);
-	void plotTriangle(Vector2 p1, Vector2 p2, Vector2 p3, Color c, bool fill);
-private:
-	void initSystems(HINSTANCE hInstance, int nShowCmd);
-	void mainLoop();
-	void processInput();
-	void drawScreen();
-	void* memory;
-	BITMAPINFO _bitmapInfo;
-	static LRESULT CALLBACK WndProc(HWND window, UINT message, WPARAM wParam, LPARAM lParam);
-	WNDCLASS _windowclass;
-	HWND _window;
-	WindowState _windowState;
-	Mesh _mesh;
-	Color color;
-	RenderObject _ro;
-	Matrix mat;
-	Matrix mat2;
-	Matrix im;
-};
+		Matrix T = (Matrix)Vector3(-center.x, -center.y, -center.z);
+		Matrix nT = (Matrix)center;
+		m = m + T;
+		m = rotM * m;
+		m = m + nT;
+		temp[i] = Vector3(m.m[0][0], m.m[1][0], m.m[2][0]);
 
-#pragma once
-#include <vector>
-class Matrix
-{
-public:
-	std::vector<std::vector<float>> m;
-	Matrix(int nsx, int nsy, float default_value);
-	Matrix(int nsx, int nsy, std::vector<std::vector<float>> default_value);
-	Matrix() = default;
-	float sx;
-	float sy;
-	static Matrix im(int s) {
-		Matrix temp(s,s,0);
-		for (int x = 0; x < s; x++) {
-			for (int y = 0; y < s; y++) {
-				if (x == y) {
-					temp.m[x][y] = 1;
-				}
-			}
-		}
-		return temp;
 	}
-	Matrix operator + (const Matrix& other) {
-		if (other.sx != sx || other.sy != sy) {
-			return Matrix(sx, sy, 0);
-		}
-		else {
-			std::vector<std::vector<float>> temp = m;
-			for (int r = 0; r < sx; r++) {
-				for (int v = 0; v < sy; v++) {
-					temp[r][v] = m[r][v] + other.m[r][v];
-				}
-			}
-			return Matrix(sx, sy, temp);
-		}
-	}
-	Matrix operator * (const Matrix& other) {
-		if (sx != other.sy) {
-			return Matrix(sx, sy, 0);
-		}
 
-		std::vector<std::vector<float>> result(sy, std::vector<float>(other.sx, 0));
-		for (int i = 0; i < sy; i++) {
-			for (int j = 0; j < other.sx; j++) {
-				for (int k = 0; k < sx; k++) {
-					result[i][j] += m[i][k] * other.m[k][j];
-				}
-			}
-		}
-		return Matrix(other.sx, sy, result);
-	}
-};
-#pragma once
-#include "Vector3.h"
-#include <vector>
-class Mesh
-{
-public:
-	std::vector<Vector3> vertices;
-	std::vector<int> triangles;
-	Mesh(std::vector<Vector3> nvertices, std::vector<int> ntriangles);
-	Mesh() = default;
-};
-pragma once
-#include "RenderObject.h"
-#include "Mesh.h"
-#include <vector>
-
-class MainWindow;
-
-class RenderEngine
-{
-public:
-	std::vector<RenderObject> renderQueue;
-	void AddToRenderQueue(RenderObject object);
-	void AddListToRenderQueue(std::vector<RenderObject> objects);
-	static std::vector<RenderObject> ConvertMeshToRenderObjects(Mesh mesh, float windowWidth, float windowHeight);
-};
-
-#pragma once
-#include "Color.h"
-#include "Vector2.h" 
-#include "Vector3.h" 
-#include <vector>
-class RenderObject
-{
-public:
-	Color c;
-	std::vector<Vector2> coordinates;
-	RenderObject(Color nc, std::vector<Vector2>);
-	RenderObject() = default;
-};
-#pragma once
-#include "Matrix.h"
-class Rotation
-{
-public:
-	static Matrix rotZ(float amount, bool twod) {
-		Matrix temp;
-		if (twod) {
-			temp = Matrix(2, 2, { {(float)cos(amount),(float)-sin(amount)},{(float)sin(amount),(float)cos(amount)} });
-		}
-		else {
-			temp = Matrix(3, 3, {
-			{(float)cos(amount),(float)-sin(amount), 0 },
-			{(float)sin(amount),(float)cos(amount), 0 },
-			{ 0,0,1 }
-			});
-		}
-	}
-	static Matrix rotY(float amount) {
-		Matrix temp;
-		temp = Matrix(3, 3, {
-			{(float)cos(amount), 0, (float)sin(amount)},
-			{0,1,0},
-			{(float)-sin(amount), 0, (float)cos(amount)}
-			});
-		return temp;
-	}
-	static Matrix rotX(float amount) {
-		Matrix temp;
-		temp = Matrix(3, 3, {
-			{ 1,0,0 },
-			{0, (float)cos(amount),(float)-sin(amount)},
-			{0, (float)sin(amount),(float)cos(amount),}
-			});
-		return temp;
-	}
-};
-
-#pragma once
-#include "Matrix.h"
-class Vector2
-{
-public:
-	float x = 0.0f;
-	float y = 0.0f;
-	Vector2(float nx, float ny);
-	Vector2() = default;
-	Vector2 operator + (const Vector2 &other) {
-		return Vector2(x + other.x, y + other.y);
-	}
-	Vector2 operator - (const Vector2& other) {
-		return Vector2(x - other.x, y - other.y);
-	}
-	Vector2 operator + (const float& other) {
-		return Vector2(x + other, y + other);
-	}
-	Vector2 operator - (const float& other) {
-		return Vector2(x - other, y - other);
-	}
-	Vector2 operator * (const float& other) {
-		return Vector2(x * other, y * other);
-	}
-	Vector2 operator / (const float& other) {
-		return Vector2(x / other, y / other);
-	}
-	Vector2 operator * (const Vector2& other) {
-		return Vector2(x * other.x, y * other.y);
-	}
-	Vector2 operator / (const Vector2& other) {
-		return Vector2(x / other.x, y / other.y);
-	}
-	Vector2 operator += (const Vector2& other) {
-		return Vector2(x + other.x, y + other.y);
-	}
-	Vector2 operator -= (const Vector2& other) {
-		return Vector2(x - other.x, y - other.y);
-	}
-	Vector2 operator += (const float& other) {
-		return Vector2(x + other, y + other);
-	}
-	Vector2 operator -= (const float& other) {
-		return Vector2(x - other, y - other);
-	}
-	Vector2 operator *= (const float& other) {
-		return Vector2(x * other, y * other);
-	}
-	Vector2 operator /= (const float& other) {
-		return Vector2(x / other, y / other);
-	}
-	Vector2 operator *= (const Vector2& other) {
-		return Vector2(x * other.x, y * other.y);
-	}
-	Vector2 operator /= (const Vector2& other) {
-		return Vector2(x / other.x, y / other.y);
-	}
-	operator Matrix() const {
-		return Matrix(1, 2, { {x},{y} });
-	}
-};
+	return Mesh(temp, mesh.triangles);
+}
 #pragma once
 #include "Matrix.h"
 class Vector3
@@ -314,43 +106,65 @@ public:
 		return Vector3(x / other.x, y / other.y, z / other.z);
 	}
 	operator Matrix() const {
-		return Matrix(1, 3, { {x},{y},{z} });
+		return Matrix(4, 1, { {x},{y},{z},{1} });
 	}
 };
+#pragma once
+#include "Vector3.h"
+#include "Vector2.h"
+#include "Mesh.h"
 #include "Color.h"
-#include <string>
-#include <cmath>
-#include <sstream>
-#include "MainWindow.h"
-Color::Color(ColorMode ncolorMode, float nrh, float ngs, float nbv) {
-	colorMode = ncolorMode;
-	rh = nrh;
-	gs = ngs;
-	bv = nbv;
-}
-uint32_t Color::rgbToHex(int r, int g, int b)
-{
-	return r * 65536 + g * 256 + b;
-}
-uint32_t Color::colorClassToHex(Color c)
-{
-	return c.rh * 65536 + c.gs * 256 + c.bv;
-}
-Color Color::interpolate(Color c1, Color c2, float intensity) {
-	return Color(ColorMode::RGB1, c1.rh + intensity * (c2.rh - c1.rh), c1.gs + intensity * (c2.gs - c1.gs), c1.bv + intensity * (c2.bv - c1.bv));
-}
-#include "mainWindow.h"
-#include <windows.h>
-#include <WinBase.h>
+#include "RenderObject.h"
+#include "RenderEngine.h"
+#include "Matrix.h"
+#include "Rotation.h"
+#include <Windows.h>
+enum class WindowState {RUN, EXIT};
 
-int WINAPI WinMain(_In_ HINSTANCE hInstance,_In_opt_ HINSTANCE hPrevInstance,_In_ LPSTR lpCmdLine,_In_ int nShowCmd)
+class MainWindow
 {
-    static MainWindow mainWindow;
-    mainWindow._classname = L"WindowClass";
-    mainWindow._windowname = L"Window";
-    mainWindow.run(hInstance, nShowCmd);
-    return 0;
-}
+public:
+	MainWindow();
+	~MainWindow();
+	void run(HINSTANCE hInstance, int nShowCmd);
+	void fatalError(LPCWSTR errorString);
+	LPCWSTR _classname = L"WindowClass";
+	LPCWSTR _windowname = L"Window";
+	int _screenWidth;
+	int _screenHeight;
+	static int CoordsToBitMapIndex(Vector2 coords, int width, int height);
+	static Vector2 BitMapIndexToCoords(int index, int width, int height);
+	void plotLine(Vector2 p1, Vector2 p2, Color color);
+	void plotTriangle(Vector2 p1, Vector2 p2, Vector2 p3, Color c, bool fill);
+	
+private:
+	void initSystems(HINSTANCE hInstance, int nShowCmd);
+	void mainLoop();
+	void processInput();
+	void drawScreen();
+	void* memory;
+	BITMAPINFO _bitmapInfo;
+	static LRESULT CALLBACK WndProc(HWND window, UINT message, WPARAM wParam, LPARAM lParam);
+	WNDCLASS _windowclass;
+	HWND _window;
+	WindowState _windowState;
+	Mesh _mesh;
+	Color color;
+	RenderObject _ro;
+};
+#pragma once
+#include "Matrix.h"
+#include "Mesh.h"
+#include "Vector3.h"
+#include <vector>
+class Rotation
+{
+public:
+	static Matrix rotX(double amount);
+	static Matrix rotY(double amount);
+	static Matrix rotZ(double amount);
+	static Mesh rotMesh(Mesh mesh, Vector3 rotation , Vector3 center);
+};
 #define UNICODE
 #define _UNICODE
 
@@ -428,13 +242,6 @@ MainWindow::MainWindow()
 		4, 0, 3, 4, 3, 7, 0, 1, 2, 0, 2, 3, 1, 5, 6, 1, 6, 2, 5, 4, 7, 5, 7, 6, 7, 3, 2, 7, 2, 6, 0, 5, 1, 0, 4, 5
 	});
 	color = Color(ColorMode::RGB1, 0.5, 0.5, 0.5);
-    mat = (Matrix)Vector3(3, 4, 2);
-    mat2 = Matrix(4, 3,
-        { {13,9,7,15}, {8,7,4,6}, {6,4,0,3} });
-
-    mat2 = mat * mat2;
-    im = Matrix::im(4);
-
 }
 MainWindow::~MainWindow() 
 {
@@ -470,6 +277,9 @@ void MainWindow::initSystems(HINSTANCE hInstance, int nShowCmd)
     if (!_window) {
        fatalError(L"Failed to Create Window."); 
     }
+    //AllocConsole();
+    //FILE* fDummy;
+    //freopen_s(&fDummy, "CONOUT$", "w", stdout);
 }
 void MainWindow::mainLoop()
 {
@@ -477,6 +287,7 @@ void MainWindow::mainLoop()
     HDC hdc = GetDC(_window);
     while (_windowState != WindowState::EXIT)
     {
+        drawScreen();
         processInput();
         StretchDIBits(
             hdc,
@@ -493,8 +304,11 @@ void MainWindow::mainLoop()
             DIB_RGB_COLORS,
             SRCCOPY
         );
+
     }
+
     ReleaseDC(_window, hdc);
+
 }
 
 void MainWindow::processInput() {
@@ -519,7 +333,7 @@ void MainWindow::drawScreen(){
         MEM_RESERVE | MEM_COMMIT,
         PAGE_READWRITE
     );
-    //plotTriangle(Vector2(50, 75), Vector2(100, 50), Vector2(100,150), Color(ColorMode::RGB1, 255,0,255),false);
+    _mesh = Rotation::rotMesh(_mesh, Vector3(0.1,0.1,0.1), Mesh::calculateCenter(_mesh));
     std::vector<RenderObject> ros = RenderEngine::ConvertMeshToRenderObjects(_mesh, _screenWidth, _screenHeight);
 
     for (RenderObject ro : ros) {
@@ -533,19 +347,27 @@ void MainWindow::drawScreen(){
     _bitmapInfo.bmiHeader.biCompression = BI_RGB;
 }
 void MainWindow::plotLine(Vector2 p1, Vector2 p2, Color color) {
+    std::uint32_t* pixel = (std::uint32_t*)memory;
+    if (!pixel) {
+        return;
+    }
     int x1 = p1.x, y1 = p1.y, x2 = p2.x, y2 = p2.y;
+    if (x1 < 0) x1 = 0;
+    if (x1 >= _screenWidth) x1 = _screenWidth - 1;
+    if (y1 < 0) y1 = 0;
+    if (y1 >= _screenHeight) y1 = _screenHeight - 1;
+    if (x2 < 0) x2 = 0;
+    if (x2 >= _screenWidth) x2 = _screenWidth - 1;
+    if (y2 < 0) y2 = 0;
+    if (y2 >= _screenHeight) y2 = _screenHeight - 1;
     int dx = abs(x2 - x1), dy = abs(y2 - y1);
     int sx = x1 < x2 ? 1 : -1, sy = y1 < y2 ? 1 : -1;
     int err = dx - dy;
-
     while (true) {
         Vector2 coords = Vector2(x1, y1);
         int index = CoordsToBitMapIndex(coords, _screenWidth, _screenHeight);
         float intensity = abs(err - dx + dy) / (float)(dx + dy);
-        std::uint32_t* pixel = (std::uint32_t*)memory;
-        if (pixel) {
-            pixel[index] = Color::colorClassToHex(Color::interpolate(color, Color(ColorMode::RGB1, 0, 0, 0), intensity));
-        }
+        pixel[index] = Color::colorClassToHex(color);
         if (x1 == x2 && y1 == y2) { break; };
         int e2 = 2 * err;
         if (e2 > -dy) {
@@ -562,35 +384,6 @@ void MainWindow::plotTriangle(Vector2 p1, Vector2 p2, Vector2 p3, Color c, bool 
     plotLine(p1, p2, c);
     plotLine(p2, p3, c);
     plotLine(p3, p1, c);
-}
-#include "Matrix.h"
-
-Matrix::Matrix(int nsx, int nsy, float default_value) {
-	sx = nsx;
-	sy = nsy;
-	for (int y = 0; y < nsy; y++) {
-		std::vector<float> temp = {};
-		for (int x = 0; x < nsy; x++)
-		{
-			temp.push_back(default_value);
-		}
-		m.push_back(temp);
-	}
-}
-
-Matrix::Matrix(int nsx, int nsy, std::vector<std::vector<float>> default_value) {
-	sx = nsx;
-	sy = nsy;
-	m = default_value;
-}
-#include "Mesh.h"
-Mesh::Mesh(std::vector<Vector3> nvertices, std::vector<int> ntriangles) {
-	if (size(nvertices) >= 3) {
-		vertices = nvertices;
-	}
-	if (size(ntriangles) % 3 == 0) {
-		triangles = ntriangles;
-	}
 }
 
     #include "RenderEngine.h"
@@ -614,13 +407,205 @@ Mesh::Mesh(std::vector<Vector3> nvertices, std::vector<int> ntriangles) {
             RenderObject ro;
             for (int c = 0; c < 3; c++)
             {
-                int index = i + c;
                 ro.coordinates.push_back(Vector2(mesh.vertices[mesh.triangles[i + c]].x, mesh.vertices[mesh.triangles[i + c]].y));
             }
             arr.push_back(ro);
         }
         return arr;
     }
+    #pragma once
+#include "RenderObject.h"
+#include "Mesh.h"
+#include <vector>
+
+class MainWindow;
+
+class RenderEngine
+{
+public:
+	std::vector<RenderObject> renderQueue;
+	void AddToRenderQueue(RenderObject object);
+	void AddListToRenderQueue(std::vector<RenderObject> objects);
+	static std::vector<RenderObject> ConvertMeshToRenderObjects(Mesh mesh, float windowWidth, float windowHeight);
+};
+#include "Matrix.h"
+
+Matrix::Matrix(int nsx, int nsy, double default_value) : sx(nsx), sy(nsy)
+{
+	m = std::vector<std::vector<double>>(nsx, std::vector<double>(sy, default_value));
+}
+
+Matrix::Matrix(int nsx, int nsy, std::vector<std::vector<double>> default_value) : sx(nsx), sy(nsy), m(default_value) {}
+#pragma once
+#include <vector>
+#include <iostream>
+class Matrix
+{
+public:
+	std::vector<std::vector<double>> m;
+	Matrix(int nsx, int nsy, double default_value);
+	Matrix(int nsx, int nsy, std::vector<std::vector<double>> default_value);
+	Matrix() = default;
+	int sx;
+	int sy;
+	static Matrix im(int s) {
+		Matrix temp(s, s, 0);
+		for (int x = 0; x < s; x++) {
+			temp.m[x][x] = 1;
+		}
+		return temp;
+	}
+	Matrix operator + (const Matrix& other) {
+		if (other.sx != sx || other.sy != sy) {
+			return Matrix(sx, sy, 0);
+		}
+		else {
+			std::vector<std::vector<double>> temp = m;
+			for (int r = 0; r < sx; r++) {
+				for (int v = 0; v < sy; v++) {
+					temp[r][v] = m[r][v] + other.m[r][v];
+				}
+			}
+			return Matrix(sx, sy, temp);
+		}
+	}
+	Matrix operator * (const Matrix& other) {
+		if (sy != other.sx) {
+			return Matrix(sx, sy, 0);
+		}
+
+		std::vector<std::vector<double>> result(sx, std::vector<double>(other.sy, 0));
+		for (int x = 0; x < sx; x++) {
+			for (int y = 0; y < other.sy; y++) {
+				for (int r = 0; r < sy; r++) {
+
+					result[x][y] += m[x][r] * other.m[r][y];		
+
+				}
+			}
+		}
+		return Matrix(sx, other.sy, result);
+	}
+};
+#pragma once
+#include <string>
+#include <cstdint>
+#include <fcntl.h>
+enum ColorMode { RGB1, RGB255, HSV };
+class Color
+{
+public:
+	float rh;
+	float gs;
+	float bv;
+	ColorMode colorMode;
+	Color operator = (const Color& alt) {
+		return alt;
+	}
+	static uint32_t rgbToHex(int r, int g, int b);
+	static uint32_t colorClassToHex(Color c);
+	static Color interpolate(Color c1, Color c2, float intensity);
+	Color(ColorMode colorMode, float nrh, float ngs, float nbv);
+	Color() = default;
+};
+#include "Color.h"
+#include <string>
+#include <cmath>
+#include <sstream>
+#include "MainWindow.h"
+Color::Color(ColorMode ncolorMode, float nrh, float ngs, float nbv) {
+	colorMode = ncolorMode;
+	rh = nrh;
+	gs = ngs;
+	bv = nbv;
+}
+uint32_t Color::rgbToHex(int r, int g, int b)
+{
+	return r * 65536 + g * 256 + b;
+}
+uint32_t Color::colorClassToHex(Color c)
+{
+	return c.rh * 65536 + c.gs * 256 + c.bv;
+}
+Color Color::interpolate(Color c1, Color c2, float intensity) {
+	return Color(ColorMode::RGB1, c1.rh + intensity * (c2.rh - c1.rh), c1.gs + intensity * (c2.gs - c1.gs), c1.bv + intensity * (c2.bv - c1.bv));
+}
+#include "Vector2.h"
+Vector2::Vector2(float nx, float ny) : x(nx), y(ny) {}
+pragma once
+#include "Matrix.h"
+class Vector2
+{
+public:
+	float x = 0.0f;
+	float y = 0.0f;
+	Vector2(float nx, float ny);
+	Vector2() = default;
+	Vector2 operator + (const Vector2 &other) {
+		return Vector2(x + other.x, y + other.y);
+	}
+	Vector2 operator - (const Vector2& other) {
+		return Vector2(x - other.x, y - other.y);
+	}
+	Vector2 operator + (const float& other) {
+		return Vector2(x + other, y + other);
+	}
+	Vector2 operator - (const float& other) {
+		return Vector2(x - other, y - other);
+	}
+	Vector2 operator * (const float& other) {
+		return Vector2(x * other, y * other);
+	}
+	Vector2 operator / (const float& other) {
+		return Vector2(x / other, y / other);
+	}
+	Vector2 operator * (const Vector2& other) {
+		return Vector2(x * other.x, y * other.y);
+	}
+	Vector2 operator / (const Vector2& other) {
+		return Vector2(x / other.x, y / other.y);
+	}
+	Vector2 operator += (const Vector2& other) {
+		return Vector2(x + other.x, y + other.y);
+	}
+	Vector2 operator -= (const Vector2& other) {
+		return Vector2(x - other.x, y - other.y);
+	}
+	Vector2 operator += (const float& other) {
+		return Vector2(x + other, y + other);
+	}
+	Vector2 operator -= (const float& other) {
+		return Vector2(x - other, y - other);
+	}
+	Vector2 operator *= (const float& other) {
+		return Vector2(x * other, y * other);
+	}
+	Vector2 operator /= (const float& other) {
+		return Vector2(x / other, y / other);
+	}
+	Vector2 operator *= (const Vector2& other) {
+		return Vector2(x * other.x, y * other.y);
+	}
+	Vector2 operator /= (const Vector2& other) {
+		return Vector2(x / other.x, y / other.y);
+	}
+	operator Matrix() const {
+		return Matrix(1, 2, { {x},{y} });
+	}
+};
+#pragma once
+#include "Color.h"
+#include "Vector2.h" 
+#include "Vector3.h" 
+#include <vector>
+class RenderObject
+{
+public:
+	Color c;
+	std::vector<Vector2> coordinates;
+	RenderObject(Color nc, std::vector<Vector2>);
+	RenderObject() = default;
+};
 #include "RenderObject.h"
 RenderObject::RenderObject(Color nc, std::vector<Vector2> ncoordinates) {
 	c = nc;
@@ -633,14 +618,51 @@ RenderObject::RenderObject(Color nc, std::vector<Vector2> ncoordinates) {
 		//(U.x * V.y) - (U.y * V.x)
 	//);
 }
-#include "Vector2.h"
-Vector2::Vector2(float nx, float ny) {
-	x = nx;
-	y = ny;
+#include "Mesh.h"
+#include <algorithm>
+Mesh::Mesh(std::vector<Vector3> nvertices, std::vector<int> ntriangles) {
+	if (size(nvertices) >= 3) {
+		vertices = nvertices;
+	}
+	if (size(ntriangles) % 3 == 0) {
+		triangles = ntriangles;
+	}
 }
+Vector3 Mesh::calculateCenter(Mesh mesh) {
+    std::vector<float> xValues, yValues, zValues;
+    for (int i = 0; i < mesh.vertices.size(); i++) {
+        xValues.push_back(mesh.vertices[i].x);
+        yValues.push_back(mesh.vertices[i].y);
+        zValues.push_back(mesh.vertices[i].z);
+    }
+    std::sort(xValues.begin(), xValues.end());
+    std::sort(yValues.begin(), yValues.end());
+    std::sort(zValues.begin(), zValues.end());
+
+    int middle = mesh.vertices.size() / 2;
+    return Vector3(xValues[middle], yValues[middle], zValues[middle]);
+}
+#pragma once
 #include "Vector3.h"
-Vector3::Vector3(float nx, float ny, float nz) {
-	x = nx;
-	y = ny;
-	z = nz;
+#include <vector>
+class Mesh
+{
+public:
+	std::vector<Vector3> vertices;
+	std::vector<int> triangles;
+	static Vector3 calculateCenter(Mesh mesh);
+	Mesh(std::vector<Vector3> nvertices, std::vector<int> ntriangles);
+	Mesh() = default;
+};
+#include "mainWindow.h"
+#include <windows.h>
+#include <WinBase.h>
+
+int WINAPI WinMain(_In_ HINSTANCE hInstance,_In_opt_ HINSTANCE hPrevInstance,_In_ LPSTR lpCmdLine,_In_ int nShowCmd)
+{
+    static MainWindow mainWindow;
+    mainWindow._classname = L"WindowClass";
+    mainWindow._windowname = L"Window";
+    mainWindow.run(hInstance, nShowCmd);
+    return 0;
 }
