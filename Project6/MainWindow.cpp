@@ -1,4 +1,4 @@
-#define UNICODE
+﻿#define UNICODE
 #define _UNICODE
 
 #include <fcntl.h>
@@ -46,7 +46,17 @@ LRESULT CALLBACK MainWindow::WndProc(HWND window, UINT message, WPARAM wParam, L
         int height = rect->bottom - rect->top;
         if (width < 600) {rect->right = rect->left + 600;}
         if (height < 400) {rect->bottom = rect->top + 400;}
+
+        mW->renderEngine.aspectRatio = width / height;
+        mW->_screenWidth = width;
+        mW->_screenHeight = height;
         return 0;
+    }
+    case WM_KEYDOWN: {
+        mW->renderEngine.cameraPosition.z++;
+        mW->renderEngine.UpdateTransformationMatrix();
+        mW->renderEngine.UpdateProjectionMatrix();
+        std::cout << mW->renderEngine.cameraPosition.z << std::endl;
     }
     default:
     {
@@ -57,18 +67,22 @@ LRESULT CALLBACK MainWindow::WndProc(HWND window, UINT message, WPARAM wParam, L
 }
 MainWindow::MainWindow() 
 {
-	_screenWidth = 1688;
-	_screenHeight = 1050;
+	_screenWidth = 720;
+	_screenHeight = 480;
 	_windowState = WindowState::RUN;
+    renderEngine.aspectRatio = (double)_screenWidth / _screenHeight;
+
+    renderEngine.UpdateTransformationMatrix();
+    renderEngine.UpdateProjectionMatrix();
 	_mesh = Mesh(std::vector<Vector3> {
-		Vector3(200, 100, 200),
-		Vector3(200, 100, 100),
-		Vector3(200, 200, 100),
-		Vector3(200, 200, 200),
-		Vector3(100, 100, 200),
-		Vector3(100, 100, 100),
-		Vector3(100, 200, 100),
-		Vector3(100, 200, 200)
+		Vector3(200, 0, 400),
+		Vector3(200, 0, 300),
+		Vector3(200, 100, 300),
+		Vector3(200, 100, 400),
+		Vector3(100, 0, 400),
+		Vector3(100, 0, 300),
+		Vector3(100, 100, 300),
+		Vector3(100, 100, 400)
 	},
 	std::vector<int>
 	{
@@ -98,10 +112,10 @@ void MainWindow::initSystems(HINSTANCE hInstance, int nShowCmd)
         _classname,
         _windowname,
         WS_OVERLAPPEDWINDOW | WS_VISIBLE,
-        CW_USEDEFAULT,
-        CW_USEDEFAULT,
-        CW_USEDEFAULT,
-        CW_USEDEFAULT,
+        0,
+        0,
+        _screenWidth,
+        _screenHeight,
         0,
         0,
         hInstance,
@@ -110,9 +124,11 @@ void MainWindow::initSystems(HINSTANCE hInstance, int nShowCmd)
     if (!_window) {
        fatalError(L"Failed to Create Window."); 
     }
-    //AllocConsole();
-    //FILE* fDummy;
-    //freopen_s(&fDummy, "CONOUT$", "w", stdout);
+    AllocConsole();
+    FILE* fDummy;
+    freopen_s(&fDummy, "CONOUT$", "w", stdout);
+    freopen_s(&fDummy, "CONIN$", "r", stdin);
+    std::cout << "\\|/ " << GetCommandLineA() << " - Debug Console \\|/" << std::endl;
 }
 void MainWindow::mainLoop()
 {
@@ -139,7 +155,7 @@ void MainWindow::mainLoop()
         );
 
     }
-
+    FreeConsole();
     ReleaseDC(_window, hdc);
 
 }
@@ -167,10 +183,10 @@ void MainWindow::drawScreen(){
         PAGE_READWRITE
     );
     _mesh = Rotation::rotMesh(_mesh, Vector3(0.1,0.1,0.1), Mesh::calculateCenter(_mesh));
-    std::vector<RenderObject> ros = RenderEngine::ConvertMeshToRenderObjects(_mesh, _screenWidth, _screenHeight);
+    std::vector<std::vector<Vector2>> ros = RenderEngine::ConvertMeshToRenderObjects(_mesh, renderEngine, _screenWidth, _screenHeight);
 
-    for (RenderObject ro : ros) {
-        plotTriangle(ro.coordinates[0], ro.coordinates[1], ro.coordinates[2], Color(ColorMode::RGB1,255,0,0), false);
+    for (std::vector<Vector2> ro : ros) {
+        plotTriangle(ro[0], ro[1], ro[2], Color(ColorMode::RGB1,255,0,0), false);
     }
     _bitmapInfo.bmiHeader.biSize = sizeof(_bitmapInfo.bmiHeader);
     _bitmapInfo.bmiHeader.biWidth = _screenWidth;

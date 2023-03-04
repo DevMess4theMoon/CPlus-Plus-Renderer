@@ -31,6 +31,20 @@ public:
 			return Matrix(sx, sy, temp);
 		}
 	}
+	Matrix operator - (const Matrix& other) {
+		if (other.sx != sx || other.sy != sy) {
+			return Matrix(sx, sy, 0);
+		}
+		else {
+			std::vector<std::vector<double>> temp = m;
+			for (int r = 0; r < sx; r++) {
+				for (int v = 0; v < sy; v++) {
+					temp[r][v] = m[r][v] - other.m[r][v];
+				}
+			}
+			return Matrix(sx, sy, temp);
+		}
+	}
 	Matrix operator * (const Matrix& other) {
 		if (sy != other.sx) {
 			return Matrix(sx, sy, 0);

@@ -3,7 +3,6 @@
 #include "Vector2.h"
 #include "Mesh.h"
 #include "Color.h"
-#include "RenderObject.h"
 #include "RenderEngine.h"
 #include "Matrix.h"
 #include "Rotation.h"
@@ -37,8 +36,8 @@ private:
 	WNDCLASS _windowclass;
 	HWND _window;
 	WindowState _windowState;
+	RenderEngine renderEngine;
 	Mesh _mesh;
 	Color color;
-	RenderObject _ro;
 };
 
