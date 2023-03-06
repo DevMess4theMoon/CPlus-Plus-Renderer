@@ -23,8 +23,8 @@ public:
 	static int CoordsToBitMapIndex(Vector2 coords, int width, int height);
 	static Vector2 BitMapIndexToCoords(int index, int width, int height);
 	void plotLine(Vector2 p1, Vector2 p2, Color color);
-	void plotTriangle(Vector2 p1, Vector2 p2, Vector2 p3, Color c, bool fill);
-	
+	void plotTriangle(Vector2 v1, Vector2 v2, Vector2 v3, Color c, bool fill);
+	bool isInsideTriangle(Vector2 p, Vector2 v1, Vector2 v2, Vector2 v3);
 private:
 	void initSystems(HINSTANCE hInstance, int nShowCmd);
 	void mainLoop();

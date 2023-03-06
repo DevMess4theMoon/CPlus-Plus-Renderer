@@ -26,6 +26,7 @@ Vector2 MainWindow::BitMapIndexToCoords(int index, int width, int height) {
     if (index > width * height || width == 0 || height == 0) { return coords; }
     coords.y = floor(index / width);
     coords.x = floor(index % width);
+    return coords;
 }
 LRESULT CALLBACK MainWindow::WndProc(HWND window, UINT message, WPARAM wParam, LPARAM lParam) {
     LRESULT result;
@@ -46,11 +47,13 @@ LRESULT CALLBACK MainWindow::WndProc(HWND window, UINT message, WPARAM wParam, L
         int height = rect->bottom - rect->top;
         if (width < 600) {rect->right = rect->left + 600;}
         if (height < 400) {rect->bottom = rect->top + 400;}
-
         mW->renderEngine.aspectRatio = width / height;
         mW->_screenWidth = width;
         mW->_screenHeight = height;
         return 0;
+    }
+    case WM_SIZE: {
+        
     }
     case WM_KEYDOWN: {
         mW->renderEngine.cameraPosition.z++;
@@ -127,8 +130,9 @@ void MainWindow::initSystems(HINSTANCE hInstance, int nShowCmd)
     AllocConsole();
     FILE* fDummy;
     freopen_s(&fDummy, "CONOUT$", "w", stdout);
+    freopen_s(&fDummy, "CONERR$", "w", stdout);
     freopen_s(&fDummy, "CONIN$", "r", stdin);
-    std::cout << "\\|/ " << GetCommandLineA() << " - Debug Console \\|/" << std::endl;
+    std::cout << "<|> " << GetCommandLineA() << " - Debug Console <|>" << std::endl;
 }
 void MainWindow::mainLoop()
 {
@@ -184,9 +188,9 @@ void MainWindow::drawScreen(){
     );
     _mesh = Rotation::rotMesh(_mesh, Vector3(0.1,0.1,0.1), Mesh::calculateCenter(_mesh));
     std::vector<std::vector<Vector2>> ros = RenderEngine::ConvertMeshToRenderObjects(_mesh, renderEngine, _screenWidth, _screenHeight);
-
+    plotTriangle(Vector2(800, 400), Vector2(800, 600), Vector2(1000, 800), Color(ColorMode::RGB255, 0, 255, 255), true);
     for (std::vector<Vector2> ro : ros) {
-        plotTriangle(ro[0], ro[1], ro[2], Color(ColorMode::RGB1,255,0,0), false);
+        plotTriangle(ro[0], ro[1], ro[2], Color(ColorMode::RGB1,255,0,0), true);
     }
     _bitmapInfo.bmiHeader.biSize = sizeof(_bitmapInfo.bmiHeader);
     _bitmapInfo.bmiHeader.biWidth = _screenWidth;
@@ -229,8 +233,25 @@ void MainWindow::plotLine(Vector2 p1, Vector2 p2, Color color) {
         }
     }
 }
-void MainWindow::plotTriangle(Vector2 p1, Vector2 p2, Vector2 p3, Color c, bool fill) {
-    plotLine(p1, p2, c);
-    plotLine(p2, p3, c);
-    plotLine(p3, p1, c);
+void MainWindow::plotTriangle(Vector2 v1, Vector2 v2, Vector2 v3, Color c, bool fill) {
+    std::uint32_t* pixel = (std::uint32_t*)memory;
+    if (!pixel) {
+        return;
+    }
+    if (fill) {
+        plotLine(v1, v2, c);
+        plotLine(v2, v3, c);
+        plotLine(v3, v1, c);
+        if (v1.y > v2.y) std::swap(v1, v2);
+        if (v2.y > v3.y) std::swap(v2, v3);
+        if (v1.y > v2.y) std::swap(v1, v2);
+        for (int y = v1.y; y < v2.y; y++) {
+            plotLine(Vector2(v1.x, y),Vector2(v2.x, y),c);
+        }
+    }
+    else {
+        plotLine(v1, v2, c);
+        plotLine(v2, v3, c);
+        plotLine(v3, v1, c);
+    }
 }
